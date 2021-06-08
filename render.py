@@ -28,9 +28,8 @@ series = PerlinSeries(image, 1)
 #field.generate_input(lambda x, y: np.sin(2 * x) * np.sin(1 * y))
 
 beta = 1
-frames = 10000
+frames = 20000
 jump = 100
-#ideo.release()
 i = 0
 
 #print(series.calculate(frames, beta, jump, 0))
