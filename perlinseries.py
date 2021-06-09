@@ -9,17 +9,24 @@ class PerlinSeries:
         self.shape = image.shape
         self.out = np.zeros(image.shape)
         self.fields = []
+        self.size = depth
         for i in range(1, depth + 1):
             self.fields.append(pf.PerlinField(image, (2 ** i, 2 ** i)))
+
+    def copy(self):
+        new = PerlinSeries(self.image, self.size)
+        for i in range(self.size):
+            shp = self.fields[i].mag.shape
+            new.fields[i].mag = self.fields[i].mag + np.zeros(shp)
+            new.fields[i].dxn = self.fields[i].dxn + np.zeros(shp)
+        return new
 
     # Stream: yield intermittent frames which are multiples of the given number. 0 to turn off
     def epoch(self, iterations, learning_rate, stream=0):
         residue = self.image
         for i in range(len(self.fields)):
-            # Set the current layer's target to whatever is leftover from the previous
             self.fields[i].set_image(residue)
             for j in range(iterations):
-                # Perform ^^ number of steps
                 self.fields[i].descent(learning_rate)
                 if stream != 0 and j % stream == 0:
                     self.render()
@@ -33,7 +40,6 @@ class PerlinSeries:
         if octaves == -1:
             octaves = len(self.fields)
         for i in range(octaves):
-            #print(self.out)
             self.fields[i].render()
             self.out = self.out + self.fields[i].out #SEGFAULT
 
@@ -48,7 +54,6 @@ class PerlinSeries:
     def quick_rgb(self, array):
         val = np.clip((array + np.ones(array.shape)) * 128, 0, 255)
         out = np.array(np.dstack((val, val, val)), dtype=np.uint8)
-
         return out
 
 def noise(shape, res):
