@@ -117,26 +117,26 @@ class PerlinField:
                 dump_cell(i, j, self.dxn_grad)
         self.dxn_grad /= (self.cell_size ** 2)
 
+        if False:
+            # Magnitude components of gradient descent rely on normal
+            normals = np.dstack((self.mag * cos, self.mag * sin))
+            g00 = self.error * np.sum(self.s00 * normals[j, i], axis=2)
+            g10 = self.error * np.sum(self.s10 * normals[j, i + 1], axis=2)
+            g01 = self.error * np.sum(self.s01 * normals[j + 1, i], axis=2)
+            g11 = self.error * np.sum(self.s11 * normals[j + 1, i + 1], axis=2)
 
-        # Magnitude components of gradient descent rely on normal
-        normals = np.dstack((self.mag * cos, self.mag * sin))
-        g00 = self.error * np.sum(self.s00 * normals[j, i], axis=2)
-        g10 = self.error * np.sum(self.s10 * normals[j, i + 1], axis=2)
-        g01 = self.error * np.sum(self.s01 * normals[j + 1, i], axis=2)
-        g11 = self.error * np.sum(self.s11 * normals[j + 1, i + 1], axis=2)
-
-        self.mag_grad = np.zeros(self.mag.shape)
-        for j in range(self.y_size // l):
-            for i in range(self.y_size // l):
-                dump_cell(i, j, self.mag_grad)
+            self.mag_grad = np.zeros(self.mag.shape)
+            for j in range(self.y_size // l):
+                for i in range(self.y_size // l):
+                    dump_cell(i, j, self.mag_grad)
 
 
     def step(self, beta):
         # magnitude components are WAY more sensitive than dxn components
         self.dxn += self.dxn_grad * beta
-        self.mag += self.mag_grad * beta * 0.0001
-        self.mag = np.clip(self.mag, 0, 1)
-        self.mag += (np.ones((self.mag.shape)) - self.mag) * 0.01
+        #self.mag += self.mag_grad * beta * 0.0001
+        #self.mag = np.clip(self.mag, 0, 1)
+        #self.mag += (np.ones((self.mag.shape)) - self.mag) * 0.01
 
 
     # it all boils down to this

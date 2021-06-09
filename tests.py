@@ -11,17 +11,24 @@ frameSize = (D, D)
 # OpenCV avi video setup
 width = D
 height = D
-FPS = 20
+FPS = 6
 seconds = 10
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
 video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
 
-def png_to_array(path):
+# Returns a tuple of a red, green, and blue array from an image, clipped/padded to test dimensions
+def png_to_arrays(path):
     image = im.open(path)
-    return np.array(image.getdata())
+    image = image.resize((D, D))
+    arrays = (np.array(image) / 256).transpose([2, 0, 1])
+    return arrays[2], arrays[1], arrays[0]
 
-def save_png(input, path):
-    a=1
+
+def average(array):
+    avg = array.sum() / (D * D)
+    return array - np.ones(array.shape) * avg, avg
+
+
 
 
 # Perlin series tests take INPUT as a test image
@@ -34,16 +41,28 @@ def perlin_test(input, octaves, learning_rate, epoch_frames, jump, playback):
         if playback:
             raster = series.quick_rgb(series.out)
             video.write(raster)
-        series.update_error()
-        print("frame: " + str(i * jump) + ", error: " + str(series.total_error()))
+            series.update_error()
+            print("frame: " + str(i * jump) + ", error: " + str(series.total_error()))
         i += 1
     return series
 
 
+# Return Perlin series of red, green, and blue given an input image
+def perlinize(red, green, blue, octaves, learning_rate, epoch_frames):
+    red_series = perlin_test(red, octaves, learning_rate, epoch_frames, 1, False)
+    print("red channel finished")
+    green_series = perlin_test(green, octaves, learning_rate, epoch_frames, 1, False)
+    print("green channel finished")
+    blue_series = perlin_test(blue, octaves, learning_rate, epoch_frames, 1, False)
+    print("blue channel finished")
+    return red_series, green_series, blue_series
+
+
+
 def cv_rgb(red, green, blue):
-    red = np.clip((red + np.ones(red.shape)) * 128, 0, 255)
-    green = np.clip((green + np.ones(green.shape)) * 128, 0, 255)
-    blue = np.clip((blue + np.ones(blue.shape)) * 128, 0, 255)
+    red = np.clip(red * 255, 0, 255)
+    green = np.clip(green * 255, 0, 255)
+    blue = np.clip(blue * 255, 0, 255)
     out = np.array(np.dstack((red, green, blue)), dtype=np.uint8)
     return out
 
@@ -55,8 +74,8 @@ SOLID = np.ones((D, D)) * 255
 def animate(red, green, blue, frames, jump):
     r_omega, g_omega, b_omega = [], [], []
     for i in range(red.size):
-        r_omega.append(np.ones(red.fields[i].dxn.shape) * 0.2)
-        g_omega.append(np.ones(green.fields[i].dxn.shape) * -0.2)
+        r_omega.append(np.random.sample(red.fields[i].dxn.shape) * 0.02)
+        g_omega.append(np.random.sample(green.fields[i].dxn.shape) * -0.02)
         b_omega.append(np.zeros(green.fields[i].dxn.shape))
 
     for i in range(frames):
@@ -76,14 +95,25 @@ def animate(red, green, blue, frames, jump):
 
 
 # Checkerboard test
-image = Field(frameSize, lambda x, y: np.sin(6 * x) * np.sin(6 * y), D / 2, D / 2).out
+#image = Field(frameSize, lambda x, y: np.sin(6 * x) * np.sin(6 * y), D / 2, D / 2).out
 
 # Logo test
-#image = png_to_array("test_images/512x512-logo-five-pointed-star-logo-icon-icons-download-8.png")
 
-perlin = perlin_test(image, octaves=7, learning_rate=5, epoch_frames=20, jump=5, playback=False)
-animate(red=perlin, green=perlin.copy(), blue=PerlinSeries(SOLID, perlin.size), frames=100, jump=5)
 
-video.release()
+
+red, green, blue = png_to_arrays("test_images/windowsxp.jpeg") # Convert png to input arrays
+red, red_avg = average(red)
+green, green_avg = average(green)
+blue, blue_avg = average(blue)
+#perlin = perlin_test(image, octaves=7, learning_rate=5, epoch_frames=20, jump=5, playback=False) # Compute single Perlin series
+
+rp, gp, bp = perlinize(red, green, blue, octaves=8, learning_rate=10, epoch_frames=15)
+offset = np.ones((D, D))
+raster = cv_rgb(rp.out + offset * red_avg, gp.out + offset * green_avg, bp.out + offset * blue_avg)
+cv2.imwrite('renders/windowsxp_perlinized.png', raster)
+
+# Compute a Perlin series for each channel
+#animate(red=rp, green=gp, blue=bp, frames=10, jump=5)
+#video.release()
 
 print("finished with no errors")
