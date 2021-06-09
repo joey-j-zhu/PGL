@@ -5,6 +5,7 @@ class PerlinSeries:
     # Image resolution must be a multiple of 3
     def __init__(self, image, depth):
         self.image = image
+        self.error = self.image
         self.shape = image.shape
         self.out = np.zeros(image.shape)
         self.fields = []
@@ -12,17 +13,19 @@ class PerlinSeries:
             self.fields.append(pf.PerlinField(image, (2 ** i, 2 ** i)))
 
     # Stream: yield intermittent frames which are multiples of the given number. 0 to turn off
-    def calculate(self, iterations, learning_rate, jump, stream=0):
+    def epoch(self, iterations, learning_rate, stream=0):
         residue = self.image
         for i in range(len(self.fields)):
-            self.fields[i].image = residue
-            #print(iterations // jump)
-            for j in range(iterations // jump):
+            # Set the current layer's target to whatever is leftover from the previous
+            self.fields[i].set_image(residue)
+            for j in range(iterations):
+                # Perform ^^ number of steps
                 self.fields[i].descent(learning_rate)
-                residue = residue - self.fields[i].out
                 if stream != 0 and j % stream == 0:
                     self.render()
-                    yield self.out
+                    yield residue
+            residue = residue - self.fields[i].out
+
 
     # Update self.out
     def render(self, octaves=-1):
@@ -40,13 +43,12 @@ class PerlinSeries:
     def total_error(self):
         return 0.5 * np.sum(self.error * self.error, axis=None)
 
-    def quick_rgb(self):
-        val = ((self.out) * 128)
-        #print(val.shape)
-        #val = np.tile(np.max(self.min_val, np.min(self.max_val, (self.out + 1) * 128)), (1, 1, 3))
+    # Generate an RGB array for OpenCV render from a scalar array
+    # For a good render, make sure the array is within [-1, 1]
+    def quick_rgb(self, array):
+        val = np.clip((array + np.ones(array.shape)) * 128, 0, 255)
         out = np.array(np.dstack((val, val, val)), dtype=np.uint8)
-        #print(out[0, 0])
-        #print(out.shape)
+
         return out
 
 def noise(shape, res):

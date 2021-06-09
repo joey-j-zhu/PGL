@@ -23,35 +23,32 @@ video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
 #image = noise(frameSize, cellSize)
 #field = PerlinField(image, cellSize)
 
-image = Field(frameSize, lambda x, y: np.sin(2 * x) * np.sin(0.75 * y), D / 2, D / 2).out
-series = PerlinSeries(image, 1)
+
 #field.generate_input(lambda x, y: np.sin(2 * x) * np.sin(1 * y))
 
-beta = 1
-frames = 20000
-jump = 100
+beta = 10
+frames = 15
+jump = 1
 i = 0
 
-#print(series.calculate(frames, beta, jump, 0))
-for rendered_frame in series.calculate(frames, beta, jump, 1):
-    raster = series.quick_rgb()
-    #raster = np.array(rendered_frame, dtype=np.uint8)
-    #print(raster[0, 0])
+# Test 1: checkerboard
+image = Field(frameSize, lambda x, y: np.sin(6 * x) * np.sin(6 * y), D / 2, D / 2).out
+
+# Test 2: sin x
+#image = Field(frameSize, lambda x, y: np.sin(6 * x), D / 2, D / 2).out
+
+series = PerlinSeries(image, 6)
+
+# Integrated test 1: recreate a checkerboard
+for rendered_frame in series.epoch(frames, beta, jump):
+    raster = series.quick_rgb(series.out)
     video.write(raster)
+
     series.update_error()
-    print("frame: " + str(i) + ", error: " + str(series.total_error()))
+
+    print("frame: " + str(i * jump) + ", error: " + str(series.total_error()))
     i += 1
 
 video.release()
 
-
-# Goal: get error down to 100
-
-#for i in range(240):
-#    c.update(1)
-#    raster = np.array(c.out, dtype=np.uint8)
-#    print("frame " + str(i))
-#    video.write(raster)
-#video.release()
-#cv2.imshow('image',img)
 print("finished with no errors")
