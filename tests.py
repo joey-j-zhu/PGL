@@ -1,3 +1,7 @@
+# TODO: Reformat tester and Perlin files into module, create new file for structure manipulation/interpolation
+# TODO: Implement a way to save Perlin structures
+# TODO: Fix magnitude descent
+
 from perlinfield import *
 from perlinseries import *
 import numpy as np
@@ -11,7 +15,7 @@ frameSize = (D, D)
 # OpenCV avi video setup
 width = D
 height = D
-FPS = 6
+FPS = 20
 seconds = 10
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
 video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
@@ -69,14 +73,14 @@ def cv_rgb(red, green, blue):
 
 # Animate a Perlin series by assigning a random rotation speed for each vector
 # All RGB series must be of same depth
-SOLID = np.ones((D, D)) * 255
+SOLID = np.ones((D, D))
 
-def animate(red, green, blue, frames, jump):
+def animate(red, green, blue, red_avg, green_avg, blue_avg, frames, jump):
     r_omega, g_omega, b_omega = [], [], []
     for i in range(red.size):
-        r_omega.append(np.random.sample(red.fields[i].dxn.shape) * 0.02)
-        g_omega.append(np.random.sample(green.fields[i].dxn.shape) * -0.02)
-        b_omega.append(np.zeros(green.fields[i].dxn.shape))
+        r_omega.append(np.ones(red.fields[i].dxn.shape) * 0.25 / (i + 1))
+        g_omega.append(np.ones(green.fields[i].dxn.shape) * 0.25 / (i + 1))
+        b_omega.append(np.ones(blue.fields[i].dxn.shape) * 0.25 / (i + 1))
 
     for i in range(frames):
         for j in range(red.size):
@@ -88,7 +92,7 @@ def animate(red, green, blue, frames, jump):
         green.render()
         blue.render()
 
-        raster = cv_rgb(SOLID, green.out, red.out)
+        raster = cv_rgb(rp.out + SOLID * red_avg, gp.out + SOLID * green_avg, bp.out + SOLID * blue_avg)
         video.write(raster)
         if not (i % jump):
             print("frame: " + str(i))
@@ -101,19 +105,33 @@ def animate(red, green, blue, frames, jump):
 
 
 
-red, green, blue = png_to_arrays("test_images/windowsxp.jpeg") # Convert png to input arrays
+red, green, blue = png_to_arrays("test_images/rain.png") # Convert png to input arrays
 red, red_avg = average(red)
 green, green_avg = average(green)
 blue, blue_avg = average(blue)
 #perlin = perlin_test(image, octaves=7, learning_rate=5, epoch_frames=20, jump=5, playback=False) # Compute single Perlin series
-
-rp, gp, bp = perlinize(red, green, blue, octaves=8, learning_rate=10, epoch_frames=15)
+rp, gp, bp = perlinize(red, green, blue, octaves=8, learning_rate=10, epoch_frames=20)
 offset = np.ones((D, D))
+
+rp.save("perlinmaps/rain_red.npz")
+gp.save("perlinmaps/rain_green.npz")
+bp.save("perlinmaps/rain_blue.npz")
+
+rp = load("perlinmaps/rain_red.npz")
+gp = load("perlinmaps/rain_green.npz")
+bp = load("perlinmaps/rain_blue.npz")
+rp.render()
+gp.render()
+bp.render()
+
 raster = cv_rgb(rp.out + offset * red_avg, gp.out + offset * green_avg, bp.out + offset * blue_avg)
-cv2.imwrite('renders/windowsxp_perlinized.png', raster)
+
+cv2.imwrite('renders/rain_perlinized.png', raster)
+#animate(red=gp, green=gp, blue=bp, red_avg=red_avg, green_avg=green_avg, blue_avg=blue_avg, frames=100, jump=5)
+
 
 # Compute a Perlin series for each channel
 #animate(red=rp, green=gp, blue=bp, frames=10, jump=5)
-#video.release()
+video.release()
 
 print("finished with no errors")

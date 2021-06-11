@@ -56,6 +56,25 @@ class PerlinSeries:
         out = np.array(np.dstack((val, val, val)), dtype=np.uint8)
         return out
 
+    # Save this Perlin series to a file
+    def save(self, path):
+        arrays = [self.image]
+        for i in range(self.size):
+            arrays.append(self.fields[i].dxn)
+            arrays.append(self.fields[i].mag)
+        sav = np.array(arrays, dtype=object)
+        np.savez(path, sav)
+
+# Read a Perlin series and load it
+def load(path):
+    arrays = np.load(path, allow_pickle=True)['arr_0']
+    size = (len(arrays) - 1) // 2
+    # Must pass an empty array in so construction works
+    series = PerlinSeries(arrays[0], size)
+    for i in range(size):
+        series.fields[i].load(arrays[2 * i + 2], arrays[2 * i + 1])
+    return series
+
 def noise(shape, res):
     image = np.zeros(shape)
     p = pf.PerlinField(image, res)
