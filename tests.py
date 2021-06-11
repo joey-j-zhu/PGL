@@ -4,6 +4,7 @@
 
 from perlinfield import *
 from perlinseries import *
+from render import *
 import numpy as np
 import cv2
 from PIL import Image as im
@@ -15,7 +16,7 @@ frameSize = (D, D)
 # OpenCV avi video setup
 width = D
 height = D
-FPS = 20
+FPS = 24
 seconds = 10
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
 video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
@@ -26,11 +27,6 @@ def png_to_arrays(path):
     image = image.resize((D, D))
     arrays = (np.array(image) / 256).transpose([2, 0, 1])
     return arrays[2], arrays[1], arrays[0]
-
-
-def average(array):
-    avg = array.sum() / (D * D)
-    return array - np.ones(array.shape) * avg, avg
 
 
 
@@ -97,6 +93,13 @@ def animate(red, green, blue, red_avg, green_avg, blue_avg, frames, jump):
         if not (i % jump):
             print("frame: " + str(i))
 
+def cycle(files, transition, idle):
+    i = 0
+    for red, green, blue in slideshow(files, transition, idle):
+        raster = cv_rgb(red, green, blue)
+        video.write(raster)
+        print("ding!")
+
 
 # Checkerboard test
 #image = Field(frameSize, lambda x, y: np.sin(6 * x) * np.sin(6 * y), D / 2, D / 2).out
@@ -106,9 +109,6 @@ def animate(red, green, blue, red_avg, green_avg, blue_avg, frames, jump):
 
 
 red, green, blue = png_to_arrays("test_images/rain.png") # Convert png to input arrays
-red, red_avg = average(red)
-green, green_avg = average(green)
-blue, blue_avg = average(blue)
 #perlin = perlin_test(image, octaves=7, learning_rate=5, epoch_frames=20, jump=5, playback=False) # Compute single Perlin series
 rp, gp, bp = perlinize(red, green, blue, octaves=8, learning_rate=10, epoch_frames=20)
 offset = np.ones((D, D))
@@ -124,14 +124,22 @@ rp.render()
 gp.render()
 bp.render()
 
-raster = cv_rgb(rp.out + offset * red_avg, gp.out + offset * green_avg, bp.out + offset * blue_avg)
+raster = cv_rgb(rp.out, gp.out, bp.out)
 
 cv2.imwrite('renders/rain_perlinized.png', raster)
 #animate(red=gp, green=gp, blue=bp, red_avg=red_avg, green_avg=green_avg, blue_avg=blue_avg, frames=100, jump=5)
 
-
 # Compute a Perlin series for each channel
 #animate(red=rp, green=gp, blue=bp, frames=10, jump=5)
+
+
+
+cycle(["windowsxp", "sunset", "rain"], 24, 24)
+
 video.release()
 
 print("finished with no errors")
+
+
+
+

@@ -4,7 +4,9 @@ import numpy as np
 class PerlinSeries:
     # Image resolution must be a multiple of 3
     def __init__(self, image, depth):
-        self.image = image
+        px = image.shape[0] * image.shape[1]
+        self.avg = (np.sum(image) / px) / 256
+        self.image = image - np.ones(image.shape) * self.avg
         self.error = self.image
         self.shape = image.shape
         self.out = np.zeros(image.shape)
@@ -36,7 +38,7 @@ class PerlinSeries:
 
     # Update self.out
     def render(self, octaves=-1):
-        self.out = np.zeros(self.shape)
+        self.out = np.ones(self.shape) * self.avg
         if octaves == -1:
             octaves = len(self.fields)
         for i in range(octaves):
@@ -73,6 +75,7 @@ def load(path):
     series = PerlinSeries(arrays[0], size)
     for i in range(size):
         series.fields[i].load(arrays[2 * i + 2], arrays[2 * i + 1])
+    series.render()
     return series
 
 def noise(shape, res):
