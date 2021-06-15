@@ -163,3 +163,21 @@ class PerlinField:
         self.dxn = dxn
 
 
+    def plaster(self, func):
+        cx = self.dxn.shape[0] // 2
+        cy = self.dxn.shape[1] // 2
+        dx = self.image.shape[0] / 2
+        dy = self.image.shape[1] / 2
+
+        new_x, new_y = load_coordinates()
+
+        # Shift
+        # Stretch from [-1, 1] to [
+        out = np.ones(self.dxn.shape)
+
+        func = lambda x: x
+        return func(out)
+
+
+
+

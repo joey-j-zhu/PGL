@@ -24,10 +24,16 @@ def slideshow(files, transition, idle, rev_offset, octaves=-1):
         red_maps.append(load("perlinmaps/" + file + "_red.npz"))
         green_maps.append(load("perlinmaps/" + file + "_green.npz"))
         blue_maps.append(load("perlinmaps/" + file + "_blue.npz"))
+
     for i in range(len(files)):
-        #red_maps[i].align_angles(red_maps[(i + 1) % len(files)])
-        #green_maps[i].align_angles(green_maps[(i + 1) % len(files)])
-        #blue_maps[i].align_angles(blue_maps[(i + 1) % len(files)])
+        red_maps[i].align_angles(red_maps[(i + 1) % len(files)])
+        green_maps[i].align_angles(green_maps[(i + 1) % len(files)])
+        blue_maps[i].align_angles(blue_maps[(i + 1) % len(files)])
+
+        red_maps[i].jitter()
+        green_maps[i].jitter()
+        blue_maps[i].jitter()
+
         for j in range(idle):
             yield red_maps[i].out, green_maps[i].out, blue_maps[i].out
         for j in range(transition):

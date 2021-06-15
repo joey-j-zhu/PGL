@@ -5,6 +5,7 @@
 # TODO: Map functions from space coords to gradient grid coords
 
 # TODO: Perturbation w/ position and velocity
+# TODO: Goal: 512x512 total square error < 1000
     # Gradients affected by an inv.square force
     # Also proportional with cross product length
 
@@ -81,11 +82,13 @@ def load_perlin_map(name):
     return rp, gp, bp
 
 
+
+
 def cv_rgb(red, green, blue):
     red = np.clip(red * 255, 0, 255)
     green = np.clip(green * 255, 0, 255)
     blue = np.clip(blue * 255, 0, 255)
-    out = np.array(np.dstack((red, green, blue)), dtype=np.uint8)
+    out = np.array((np.dstack((red, green, blue)) // 255) * 255, dtype=np.uint8)
     return out
 
 
@@ -121,12 +124,14 @@ def cycle(files, transition, idle, rev_offset):
         video.write(raster)
         print("ding!")
 
-#perlin = perlin_test(image, octaves=7, learning_rate=5, epoch_frames=20, jump=5, playback=False) # Compute single Perlin series
-#perlinize("sunset1", octaves=8, learning_rate=10, epoch_frames=20)
-#perlinize("sunset2", octaves=8, learning_rate=10, epoch_frames=20)
+red, green, blue = png_to_arrays("test_images/zebra-1")
+perlin = perlin_test(green, octaves=7, learning_rate=1, epoch_frames=50, jump=5, playback=True) # Compute single Perlin series
+#perlin.save("renders/zebra-1")
+#perlinize("zebra-1", octaves=8, learning_rate=10, epoch_frames=20)
+#perlinize("zebra-2", octaves=8, learning_rate=10, epoch_frames=20)
 #perlinize("sunset3", octaves=8, learning_rate=10, epoch_frames=20)
 
-cycle(["rain", "windowsxp", "sunset1"], 400, 0, 0)
+#cycle(["zebra-1", "zebra-2"], 150, 0, 0)
 video.release()
 print("LETS FUCKING GOOOOOO")
 

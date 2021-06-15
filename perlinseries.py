@@ -88,6 +88,10 @@ class PerlinSeries:
                         while abs(self.fields[i].dxn[x, y] - other.fields[i].dxn[x, y]) > np.pi:
                             self.fields[i].dxn[x, y] -= 2 * np.pi
 
+    def jitter(self):
+        for i in range(self.size):
+            offset = np.random.randint(-1, 1, self.fields[i].dxn.shape)
+            self.fields[i].rotate(offset * 2 * np.pi)
 
 
 # Read a Perlin series and load it
