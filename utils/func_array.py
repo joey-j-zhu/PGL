@@ -6,7 +6,7 @@ def load_coordinates(x_size, y_size, increment):
     return x, y
 
 def centered_unit(l):
-    x_coords, y_coords = load_coordinates(l, l, 2 * l)
+    x_coords, y_coords = load_coordinates(l, l, l / 2)
     x_coords -= np.ones((l, l))
     y_coords -= np.ones((l, l))
     return x_coords, y_coords

@@ -18,7 +18,7 @@ import utils.func_array as fa
 
 # ALL TESTS ARE OF 512x512 IMAGES
 D = 256
-UPSCALE = 1
+UPSCALE = 2
 frameSize = (D, D)
 
 # OpenCV avi video setup
@@ -26,22 +26,27 @@ width = D * UPSCALE
 height = D * UPSCALE
 FPS = 24
 seconds = 60
+VSCALE = 256
+
+# Posterizing for "level curve" render
+ROUND = 1
 
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
-video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
+video = cv2.VideoWriter('render.avi', fourcc, float(FPS), (width, height))
 
 
 # Returns a tuple of a red, green, and blue array from an image, clipped/padded to test dimensions
 def png_to_arrays(path):
     image = im.open(path)
     image = image.resize((D, D))
-    arrays = (np.array(image) / 256).transpose([2, 0, 1])
+    arrays = (np.array(image) / VSCALE).transpose([2, 0, 1])
     return arrays[2], arrays[1], arrays[0]
 
 # Convert input channels of range [0, 1] into an array to directly feed into OpenCV
 def cv_rgb(red, green, blue):
-    red = np.clip(red * 255, 0, 255)
-    green = np.clip(green * 255, 0, 255)
-    blue = np.clip(blue * 255, 0, 255)
-    out = np.array(np.kron(np.dstack((red, green, blue)), UPSCALE), dtype=np.uint8)
+    red = np.clip(red * VSCALE, 0, VSCALE - 1)
+    green = np.clip(green * VSCALE, 0, VSCALE - 1)
+    blue = np.clip(blue * VSCALE, 0, VSCALE - 1)
+    raster = np.array((np.dstack((red, green, blue)) // ROUND) * ROUND, dtype=np.uint8)
+    out = raster.repeat(UPSCALE, axis=0).repeat(UPSCALE, axis=1)
     return out
