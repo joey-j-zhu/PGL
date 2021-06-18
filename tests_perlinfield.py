@@ -1,8 +1,10 @@
-from utils.tests import *
+from tests import *
 
 from perlin_map.perlinfield import *
 from perlin_map.perlinseries import *
 from perlin_map.render import *
+
+# TODO: Something went wrong with the directories, change the paths
 
 # Perlin series tests take INPUT as a test image
 # Each layer takes epoch_frames steps of size learning_rate
@@ -90,15 +92,6 @@ def cycle(files, transition, idle, rev_offset):
         print("ding!")
 
 red, green, blue = png_to_arrays("test_images/windowsxp")
-
-dx, dy = fa.generate(lambda x, y: 5 * y, D, D), fa.generate(lambda x, y: 5 * -x, D, D)
-r_diff, g_diff, b_diff = diffuse.Diffuse(red, dx, dy), diffuse.Diffuse(green, dx, dy), diffuse.Diffuse(blue, dx, dy)
-for i in range(100):
-    for j in range(10000):
-        b_diff.step(3, 1)
-    raster = cv_rgb(b_diff.out, b_diff.out, b_diff.out)
-    video.write(raster)
-    print("Frame " + str(i))
 
 #cycle(["zebra-1", "zebra-2"], 150, 0, 0)
 video.release()

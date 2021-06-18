@@ -26,8 +26,10 @@ width = D * UPSCALE
 height = D * UPSCALE
 FPS = 24
 seconds = 60
+
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
 video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
+
 
 # Returns a tuple of a red, green, and blue array from an image, clipped/padded to test dimensions
 def png_to_arrays(path):

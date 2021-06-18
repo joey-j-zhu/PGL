@@ -49,8 +49,7 @@ class Diffuse:
         finished = 0
         while not finished:
             x, y = self.grid_sample()
-            accept = self.out[x, y]
-            finished = np.random.random
+            finished = self.flip(self.out[x, y])
         return x, y
 
     # Swap the contents of two cells
