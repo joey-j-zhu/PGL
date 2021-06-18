@@ -16,6 +16,7 @@ from render import *
 import numpy as np
 import cv2
 from PIL import Image as im
+import stochastic_diffuse as diffuse
 
 # ALL TESTS ARE OF 512x512 IMAGES
 D = 512
@@ -88,7 +89,7 @@ def cv_rgb(red, green, blue):
     red = np.clip(red * 255, 0, 255)
     green = np.clip(green * 255, 0, 255)
     blue = np.clip(blue * 255, 0, 255)
-    out = np.array((np.dstack((red, green, blue)) // 255) * 255, dtype=np.uint8)
+    out = np.array((np.dstack((red, green, blue))), dtype=np.uint8)
     return out
 
 
@@ -124,12 +125,22 @@ def cycle(files, transition, idle, rev_offset):
         video.write(raster)
         print("ding!")
 
-red, green, blue = png_to_arrays("test_images/zebra-1")
-perlin = perlin_test(green, octaves=7, learning_rate=1, epoch_frames=50, jump=5, playback=True) # Compute single Perlin series
+red, green, blue = png_to_arrays("test_images/windowsxp")
+#perlin = perlin_test(green, octaves=7, learning_rate=1, epoch_frames=50, jump=5, playback=True) # Compute single Perlin series
 #perlin.save("renders/zebra-1")
 #perlinize("zebra-1", octaves=8, learning_rate=10, epoch_frames=20)
 #perlinize("zebra-2", octaves=8, learning_rate=10, epoch_frames=20)
 #perlinize("sunset3", octaves=8, learning_rate=10, epoch_frames=20)
+
+r_diff, g_diff, b_diff = diffuse.Diffuse(red), diffuse.Diffuse(green), diffuse.Diffuse(blue)
+for i in range(100):
+    for j in range(1000):
+        r_diff.step(50, 0.5)
+        g_diff.step(50, 0.5)
+        b_diff.step(50, 0.5)
+    raster = cv_rgb(r_diff.out, g_diff.out, b_diff.out)
+    video.write(raster)
+    print("Frame " + str(i))
 
 #cycle(["zebra-1", "zebra-2"], 150, 0, 0)
 video.release()
