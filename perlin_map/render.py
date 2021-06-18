@@ -1,5 +1,5 @@
-from perlinseries import *
-from interpolate import smooth
+from perlin_map.perlinseries import *
+from utils.interpolate import smooth
 
 def render_interp(a, b, t, octaves, func=smooth):
     temp = a.copy()

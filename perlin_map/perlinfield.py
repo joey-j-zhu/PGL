@@ -1,5 +1,5 @@
-from perlin import Perlin
-from interpolate import smooth
+from perlin_map.perlin import Perlin
+from utils.interpolate import smooth
 import numpy as np
 
 

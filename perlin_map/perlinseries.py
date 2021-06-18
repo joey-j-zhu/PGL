@@ -1,4 +1,4 @@
-import perlinfield as pf
+import perlin_map.perlinfield as pf
 import numpy as np
 
 class PerlinSeries:

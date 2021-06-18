@@ -1,42 +1,8 @@
-# TODO: Fix magnitude descent
-# TODO: Mask error onto successive magnitude arrays
-# TODO: Clean up magic numbers
-# TODO: Create orientation array so vectors are rotating efficiently
-# TODO: Map functions from space coords to gradient grid coords
+from utils.tests import *
 
-# TODO: Perturbation w/ position and velocity
-# TODO: Goal: 512x512 total square error < 1000
-    # Gradients affected by an inv.square force
-    # Also proportional with cross product length
-
-
-from perlinfield import *
-from perlinseries import *
-from render import *
-import numpy as np
-import cv2
-from PIL import Image as im
-import stochastic_diffuse as diffuse
-
-# ALL TESTS ARE OF 512x512 IMAGES
-D = 512
-frameSize = (D, D)
-
-# OpenCV avi video setup
-width = D
-height = D
-FPS = 30
-seconds = 30
-fourcc = cv2.VideoWriter_fourcc(*'MP42')
-video = cv2.VideoWriter('output_video.avi', fourcc, float(FPS), (width, height))
-
-# Returns a tuple of a red, green, and blue array from an image, clipped/padded to test dimensions
-def png_to_arrays(path):
-    image = im.open(path)
-    image = image.resize((D, D))
-    arrays = (np.array(image) / 256).transpose([2, 0, 1])
-    return arrays[2], arrays[1], arrays[0]
-
+from perlin_map.perlinfield import *
+from perlin_map.perlinseries import *
+from perlin_map.render import *
 
 # Perlin series tests take INPUT as a test image
 # Each layer takes epoch_frames steps of size learning_rate
@@ -83,13 +49,11 @@ def load_perlin_map(name):
     return rp, gp, bp
 
 
-
-
 def cv_rgb(red, green, blue):
     red = np.clip(red * 255, 0, 255)
     green = np.clip(green * 255, 0, 255)
     blue = np.clip(blue * 255, 0, 255)
-    out = np.array((np.dstack((red, green, blue))), dtype=np.uint8)
+    out = np.array(np.kron((np.dstack((red, green, blue))), UPSCALE), dtype=np.uint8)
     return out
 
 
@@ -126,19 +90,13 @@ def cycle(files, transition, idle, rev_offset):
         print("ding!")
 
 red, green, blue = png_to_arrays("test_images/windowsxp")
-#perlin = perlin_test(green, octaves=7, learning_rate=1, epoch_frames=50, jump=5, playback=True) # Compute single Perlin series
-#perlin.save("renders/zebra-1")
-#perlinize("zebra-1", octaves=8, learning_rate=10, epoch_frames=20)
-#perlinize("zebra-2", octaves=8, learning_rate=10, epoch_frames=20)
-#perlinize("sunset3", octaves=8, learning_rate=10, epoch_frames=20)
 
-r_diff, g_diff, b_diff = diffuse.Diffuse(red), diffuse.Diffuse(green), diffuse.Diffuse(blue)
+dx, dy = fa.generate(lambda x, y: 5 * y, D, D), fa.generate(lambda x, y: 5 * -x, D, D)
+r_diff, g_diff, b_diff = diffuse.Diffuse(red, dx, dy), diffuse.Diffuse(green, dx, dy), diffuse.Diffuse(blue, dx, dy)
 for i in range(100):
-    for j in range(1000):
-        r_diff.step(50, 0.5)
-        g_diff.step(50, 0.5)
-        b_diff.step(50, 0.5)
-    raster = cv_rgb(r_diff.out, g_diff.out, b_diff.out)
+    for j in range(10000):
+        b_diff.step(3, 1)
+    raster = cv_rgb(b_diff.out, b_diff.out, b_diff.out)
     video.write(raster)
     print("Frame " + str(i))
 

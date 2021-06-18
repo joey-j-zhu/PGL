@@ -1,5 +1,5 @@
 import numpy as np
-from interpolate import smooth
+from utils.interpolate import smooth
 import itertools
 
 class Perlin:
